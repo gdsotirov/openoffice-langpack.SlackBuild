@@ -1,0 +1,154 @@
+#!/bin/sh
+#
+# Slackware build script for Apache OpenOffice Language Packs
+# Copyright (C) 2016 Georgi D. Sotirov <gdsotirov@dir.bg>
+# The source packages are retrieved from ftp://ftp.spnet.net/ooo-bg/
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Visit SlackPack at http://sotirov-bg.net/slackpack/
+#
+# $Id: openoffice-langpack.SlackBuild,v 1.1 2016/10/14 09:48:38 gsotirov Exp $
+#
+
+. ../../slack-package.conf
+
+NAME=OpenOffice
+LNAME=$(echo $NAME | tr [:upper:] [:lower:])
+PNAME="${LNAME}-langpack"
+VERSION_MAJOR=4
+VERSION_MINOR=1
+VERSION_PATCH=3
+VERSION=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
+ARCH=${ARCH:-i686}
+if [ "$ARCH" == "i386" -o "$ARCH" == "i486" -o "$ARCH" == "i686" ]; then
+  ARCH=i586
+fi
+BUILD=${BUILD:-1}
+LOCALE=${LOCALE:-en-US}
+
+CWD=${CWD:-`pwd`}
+TMP=${TMP:-/tmp}
+
+function unrpm() {
+  rpm2cpio < $1 | cpio --extract --make-directories --unconditional --preserve-modification-time
+}
+
+# Check for required utilities
+which rpm2cpio >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "Utility 'rpm2cpio' is missing. Please, install the package 'rpm' in order to continue."
+  exit 1
+fi
+which cpio >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "Utility 'cpio' is missing. Please, install the package 'cpio' in order to continue."
+  exit 2
+fi
+
+# Apache_OpenOffice_4.1.3_Linux_x86_langpack-rpm_bg.tar.gz
+# Apache_OpenOffice_4.1.3_Linux_x86-64_langpack-rpm_bg.tar.gz
+if [ "$ARCH" == "i586" ]; then
+  PACK_NAME="Apache_${NAME}_${VERSION}_Linux_x86_langpack-rpm_${LOCALE}"
+elif [ "$ARCH" == "x86_64" ]; then
+  PACK_NAME="Apache_${NAME}_${VERSION}_Linux_x86-64_langpack-rpm_${LOCALE}"
+else
+  PACK_NAME="Apache_${NAME}_${VERSION}_Linux_${ARCH}_langpack-rpm_${LOCALE}"
+fi
+SRC_DIR=${PACK_NAME}
+
+SRC=$TMP/$SRC_DIR
+if [ -e $SRC_DIR ]; then
+  echo "Source directory '$SRC_DIR' already exists! Plaese, move it or remove it."
+  exit 1
+fi
+
+# Package build location
+PKG=$TMP/package-${PNAME}-${LOCALE}
+if [ -e $PKG -a -d $PKG ]; then
+  echo "Package creation directory '$PKG' already exists! Please, move it or remove it."
+  exit 2
+fi
+mkdir -p $PKG
+
+# Extract archive
+cd $TMP
+ARCHIVE="$PACK_NAME.tar.gz"
+echo "[Step 1 of 6] Extracting application archive ${ARCHIVE}..."
+if [ -e $CWD/$ARCHIVE ]; then
+  tar -xvf $CWD/$ARCHIVE || exit 3
+  mv $TMP/${LOCALE} $SRC
+else
+  echo "File $CWD/$ARCHIVE does not exists! Exiting."
+  exit 3
+fi
+
+echo "[Step 2 of 6] Extracting files from rpm packages..."
+cd $SRC/RPMS
+for FILE in *.rpm; do
+  echo -n "$FILE: "
+  unrpm $FILE
+done
+mv opt $PKG
+
+# Fix permisions
+echo "[Step 3 of 6] Setting file and directory permissions..."
+cd $PKG
+chown -R root:root *
+find . -type d -exec chmod 755 {} \;
+chmod -R u+rw,go+r-w,a-s .
+bin_perms $PKG
+
+# Create documentation
+echo "[Step 4 of 6] Creating the documentation for $PNAME-$VERSION..."
+DOCSDIR=$PKG/usr/doc/${PNAME}-${LOCALE}-${VERSION}
+install -m 755 -d $DOCSDIR
+install -m 644 $CWD/APACHELIC $DOCSDIR/COPYING
+cat $CWD/README.in | sed "s/LC/${LOCALE}/g" > $DOCSDIR/README
+( cd $DOCSDIR;
+  ln -s ../../../opt/${LNAME}${VERSION_MAJOR}/readmes/README_${LOCALE}      README.${LOCALE};
+  ln -s ../../../opt/${LNAME}${VERSION_MAJOR}/readmes/README_${LOCALE}.html README.${LOCALE}.html )
+
+# Create service infos
+echo "[Step 5 of 6] Creating package's service information..."
+cd $PKG
+install -m 755 -d $PKG/install
+cat $CWD/slack-desc | sed "s/LC/${LOCALE}/g" > $PKG/install/slack-desc
+install -m 644 $CWD/slack-required $PKG/install/slack-required
+
+SBDIR=$PKG/usr/src/slackbuilds/${PNAME}-${VERSION}
+install -m 755 -d $SBDIR
+install -m 644 $CWD/slack-desc          $SBDIR/slack-desc
+install -m 644 $CWD/slack-required      $SBDIR/slack-required
+install -m 644 $CWD/${PNAME}.SlackBuild $SBDIR/${PNAME}.SlackBuild
+
+# Make the package
+PKGNAME=${PNAME}-${LOCALE}-${VERSION}-${ARCH}-${BUILD}${MYIN}
+echo "[Step 6 of 6] Creating package ${PKGNAME}..."
+cd $PKG
+makepkg -l y -c n -p $PKG_DIR/${PKGNAME}.txz
+cd $PKG_DIR
+cp $CWD/slack-desc ${PKGNAME}.txt
+md5sum ${PKGNAME}.txz > ${PKGNAME}.txz.md5
+
+# Clean up (optionally)
+if [ "$1" = "--cleanup" ]; then
+  echo "Cleaning up..."
+  rm -rf $SRC
+  rm -rf $PKG
+fi
+
+echo "All done."
+
