@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Slackware build script for Apache OpenOffice Language Packs
-# Copyright (C) 2016-2018 Georgi D. Sotirov <gdsotirov@dir.bg>
+# Copyright (C) 2016-2019 Georgi D. Sotirov <gdsotirov@dir.bg>
 # The source packages are retrieved from ftp://ftp.spnet.net/ooo-bg/
 #
 # This program is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 #
 # Visit SlackPack at http://sotirov-bg.net/slackpack/
 #
-# $Id: openoffice-langpack.SlackBuild,v 1.4 2018/12/09 19:14:14 gsotirov Exp $
+# $Id: openoffice-langpack.SlackBuild,v 1.5 2019/09/26 09:07:16 gsotirov Exp $
 #
 
 . ../../slack-package.conf
@@ -30,7 +30,7 @@ LNAME=$(echo $NAME | tr [:upper:] [:lower:])
 PNAME="${LNAME}-langpack"
 VERSION_MAJOR=4
 VERSION_MINOR=1
-VERSION_PATCH=6
+VERSION_PATCH=7
 VERSION=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
 ARCH=${ARCH:-i686}
 if [ "$ARCH" == "i386" -o "$ARCH" == "i486" -o "$ARCH" == "i686" ]; then
