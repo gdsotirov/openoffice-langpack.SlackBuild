@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Slackware build script for Apache OpenOffice Language Packs
-# Copyright (C) 2016-2020 Georgi D. Sotirov <gdsotirov@gmail.com>
+# Copyright (C) 2016-2021 Georgi D. Sotirov <gdsotirov@gmail.com>
 # The source packages are retrieved from ftp://ftp.spnet.net/ooo-bg/
 #
 # This program is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@ LNAME=$(echo $NAME | tr [:upper:] [:lower:])
 PNAME="${LNAME}-langpack"
 VERSION_MAJOR=4
 VERSION_MINOR=1
-VERSION_PATCH=8
+VERSION_PATCH=9
 VERSION=$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
 ARCH=${ARCH:-i686}
 if [ "$ARCH" == "i386" -o "$ARCH" == "i486" -o "$ARCH" == "i686" ]; then
@@ -113,7 +113,7 @@ bin_perms $PKG
 echo "[Step 4 of 6] Creating the documentation for $PNAME-$VERSION..."
 DOCSDIR=$PKG/usr/doc/${PNAME}-${LOCALE}-${VERSION}
 install -m 755 -d $DOCSDIR
-install -m 644 $CWD/APACHELIC $DOCSDIR/COPYING
+install -m 644 -p $CWD/APACHELIC $DOCSDIR/COPYING
 cat $CWD/README.in | sed "s/LC/${LOCALE}/g" > $DOCSDIR/README
 ( cd $DOCSDIR;
   ln -s ../../../opt/${LNAME}${VERSION_MAJOR}/readmes/README_${LOCALE}      README.${LOCALE};
@@ -124,13 +124,13 @@ echo "[Step 5 of 6] Creating package's service information..."
 cd $PKG
 install -m 755 -d $PKG/install
 cat $CWD/slack-desc | sed "s/LC/${LOCALE}/g" > $PKG/install/slack-desc
-install -m 644 $CWD/slack-required $PKG/install/slack-required
+install -m 644 -p $CWD/slack-required $PKG/install/slack-required
 
 SBDIR=$PKG/usr/src/slackbuilds/${PNAME}-${VERSION}
 install -m 755 -d $SBDIR
-install -m 644 $CWD/slack-desc          $SBDIR/slack-desc
-install -m 644 $CWD/slack-required      $SBDIR/slack-required
-install -m 644 $CWD/${PNAME}.SlackBuild $SBDIR/${PNAME}.SlackBuild
+install -m 644 -p $CWD/slack-desc          $SBDIR/slack-desc
+install -m 644 -p $CWD/slack-required      $SBDIR/slack-required
+install -m 644 -p $CWD/${PNAME}.SlackBuild $SBDIR/${PNAME}.SlackBuild
 
 # Make the package
 PKGNAME=${PNAME}-${LOCALE}-${VERSION}-${ARCH}-${BUILD}${MYIN}
